@@ -1,0 +1,47 @@
+image: node:12-alpine
+before_script:
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - echo "$SSH_PUB" > ~/.ssh/id_rsa.pub
+  - echo "$SSH_RSA" > ~/.ssh/id_rsa
+  - echo "$NPM_RC"> ~/.npmrc
+  - sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+  - apk update && apk upgrade
+  - apk add zip curl
+
+stages: # 分段
+  - build
+  - upload
+
+cache: # 缓存
+  paths:
+    - node_modules
+
+job_build:
+  tags:
+    - micro-app
+  stage: build
+  script:
+    - export
+    - yarn
+    - yarn build
+  only:
+    - master
+  artifacts:
+    paths:
+    - dist/
+    expire_in: 1 hour
+
+job_upload:
+  tags:
+    - micro-app
+  stage: upload
+  script:
+    - zip -r dist.zip ./dist
+    - yarn add ali-oss
+    - echo "$OSS_UPLOAD_SCRIPT" > ./upload.js
+    - chmod +x ./upload.js
+    - node ./upload.js
+  only:
+    - master
+    - merge_requests
