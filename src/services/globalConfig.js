@@ -7,7 +7,7 @@ const { server: { www } } = require('../../config/server');
 
 const setUser = async () => {
   if (!window.globalConfig.id) {
-    const { data: { result } } = await $http.get('/api2/user/info');
+    const { data: { result } } = await $http.get('/sapi/user/entuser/info');
     window.globalConfig.user = result;
     window.globalConfig.user.id = result.userId;
     window.globalConfig.user.name = result.realName;
